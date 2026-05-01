@@ -12,9 +12,21 @@ const port = process.env.PORT || 8000;
 const startServer = async () => {
   try {
     validateEnv();
-    await connectDB();
-
     const { app } = await import("./app.js");
+
+    try {
+      await connectDB();
+    } catch (error) {
+      if (process.env.NODE_ENV === "production") {
+        throw error;
+      }
+
+      app.locals.databaseUnavailable = error.message;
+      console.warn(
+        `MongoDB unavailable. API database routes will return 503: ${error.message}`
+      );
+    }
+
     const server = app.listen(port, () => {
       console.log(`Server is running at port ${port}`);
     });
@@ -22,7 +34,9 @@ const startServer = async () => {
     const shutdown = async (signal) => {
       console.log(`${signal} received. Shutting down gracefully...`);
       server.close(async () => {
-        await mongoose.connection.close();
+        if (mongoose.connection.readyState !== 0) {
+          await mongoose.connection.close();
+        }
         process.exit(0);
       });
     };

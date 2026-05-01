@@ -1,6 +1,7 @@
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
+import mongoose from "mongoose";
 import { MAX_JSON_SIZE, PROJECT_NAME } from "./constants.js";
 import {
   errorHandler,
@@ -59,6 +60,41 @@ app.get("/", (req, res) => {
 
 app.use("/healthcheck", healthcheckRouter);
 app.use("/api/v1/healthcheck", healthcheckRouter);
+
+app.use("/api/v1", (req, res, next) => {
+  const isPublicVideoRead =
+    req.method === "GET" && req.path.startsWith("/videos");
+  const isAuthenticatedUserRead =
+    req.method === "GET" &&
+    (req.path.startsWith("/user/current-user") ||
+      req.path.startsWith("/users/current-user") ||
+      req.path.startsWith("/user/history") ||
+      req.path.startsWith("/users/history"));
+  const isLoginOrRefresh =
+    req.method === "POST" &&
+    (req.path.startsWith("/user/login") ||
+      req.path.startsWith("/users/login") ||
+      req.path.startsWith("/user/refresh-token") ||
+      req.path.startsWith("/users/refresh-token"));
+
+  if (
+    (isPublicVideoRead || isAuthenticatedUserRead || isLoginOrRefresh) &&
+    mongoose.connection.readyState !== 1
+  ) {
+    return res.status(503).json(
+      new apiResponse(
+        503,
+        {
+          reason: req.app.locals.databaseUnavailable || "Database unavailable",
+        },
+        "Database is unavailable. Start MongoDB or set MONGODB_URI to a running database."
+      )
+    );
+  }
+
+  return next();
+});
+
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/videos", videoRouter);

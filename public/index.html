@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TubeView</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Primary">
+        <a class="brand" href="#/">
+          <span class="brand-mark">TV</span>
+          <span>TubeView</span>
+        </a>
+        <nav class="nav-list">
+          <a class="nav-link is-active" href="#/" data-nav="home" title="Home">
+            <span aria-hidden="true">⌂</span>
+            <span>Home</span>
+          </a>
+          <a class="nav-link" href="#/upload" data-nav="upload" title="Upload">
+            <span aria-hidden="true">⇧</span>
+            <span>Upload</span>
+          </a>
+          <a
+            class="nav-link"
+            href="#/history"
+            data-nav="history"
+            title="History"
+          >
+            <span aria-hidden="true">↺</span>
+            <span>History</span>
+          </a>
+          <a
+            class="nav-link"
+            href="#/account"
+            data-nav="account"
+            title="Account"
+          >
+            <span aria-hidden="true">◎</span>
+            <span>Account</span>
+          </a>
+        </nav>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <form class="search" id="searchForm">
+            <input
+              id="searchInput"
+              name="query"
+              type="search"
+              placeholder="Search videos"
+              autocomplete="off"
+            />
+            <button class="icon-button" type="submit" title="Search">⌕</button>
+          </form>
+          <div class="top-actions">
+            <button class="ghost-button" id="refreshButton" type="button">
+              Refresh
+            </button>
+            <button class="primary-button" id="authButton" type="button">
+              Sign in
+            </button>
+          </div>
+        </header>
+
+        <section id="status" class="status" hidden></section>
+        <section id="view" class="view" aria-live="polite"></section>
+      </main>
+    </div>
+
+    <dialog class="modal" id="authModal">
+      <form method="dialog" class="modal-head">
+        <h2 id="authTitle">Sign in</h2>
+        <button class="icon-button" type="submit" title="Close">×</button>
+      </form>
+      <div class="tabs" role="tablist" aria-label="Authentication">
+        <button class="tab is-active" type="button" data-auth-tab="login">
+          Login
+        </button>
+        <button class="tab" type="button" data-auth-tab="register">
+          Register
+        </button>
+      </div>
+
+      <form class="stack" id="loginForm">
+        <label>
+          <span>Username or email</span>
+          <input name="identifier" autocomplete="username" required />
+        </label>
+        <label>
+          <span>Password</span>
+          <input
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+          />
+        </label>
+        <button class="primary-button full" type="submit">Login</button>
+      </form>
+
+      <form class="stack is-hidden" id="registerForm">
+        <div class="two-col">
+          <label>
+            <span>Full name</span>
+            <input name="fullName" autocomplete="name" required />
+          </label>
+          <label>
+            <span>Username</span>
+            <input name="username" autocomplete="username" required />
+          </label>
+        </div>
+        <label>
+          <span>Email</span>
+          <input name="email" type="email" autocomplete="email" required />
+        </label>
+        <label>
+          <span>Password</span>
+          <input
+            name="password"
+            type="password"
+            autocomplete="new-password"
+            minlength="6"
+            required
+          />
+        </label>
+        <label>
+          <span>Avatar</span>
+          <input name="avatar" type="file" accept="image/*" required />
+        </label>
+        <label>
+          <span>Cover image</span>
+          <input name="coverImage" type="file" accept="image/*" />
+        </label>
+        <button class="primary-button full" type="submit">
+          Create account
+        </button>
+      </form>
+    </dialog>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
