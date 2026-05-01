@@ -1,33 +1,79 @@
-# Backend of Youtube using JAVASCRIPT
-- command 1 -- npm init
-- command 2 -- git init
-- command 3 -- git add .
-- command 4 -- git commit -m "Add initial files for backend"
-- command 5 -- git branch -M main
-- command 6 -- git remote add origin [GitHub Link](https://github.com/KunduSumanDeb/youtube_clone_backend_only.git)
-- command 7 -- git push -u origin main
-- command 8 -- npm i -D nodemon -> "Automatically refreshes the server after saving the changes."
-- We need to change the test command to dev that is present within the package.json file.
-```json
-"scripts": {
-  "test": "echo \"Error: no test specified\" && exit 1"
-},
-->
-"scripts": {
-  "dev": "nodemon src/index.js"
-}, 
+# YouTube Duplicate Backend
+
+Express, MongoDB, Cloudinary, JWT, and Multer backend for a YouTube-style video API.
+
+## Features
+
+- User registration with avatar and optional cover image upload
+- Login, logout, access-token refresh, password change, and current-user endpoints
+- Account, avatar, and cover image updates
+- Public channel profile and authenticated watch history
+- Video upload, listing, detail view, update, delete, and publish/unpublish toggle
+- JSON error responses, 404 handler, health checks, CORS, cookie auth, and graceful shutdown
+- Smoke tests for deploy-critical API behavior
+
+## Setup
+
+1. Install dependencies:
+
+```bash
+npm install
 ```
-- command 9 -- npm run dev -> this will run the index.js file.
-- command 10 -- git status -> To check the files that are present in unstaged area. -> command 2/3. 3 - "Setup project files"
-- command 11 -- git push
-- command 12 -- npm i mongoose dotenv express
-- Connected the database to my backend
-- utils section added. apiError, apiResponse, asyncHandeller files added.
-- Command 13 -- npm i mongoose-aggregate-paginate-v2
-- Command 14 -- npm i bcrypt -> Provides encryption.
-- Command 15 -- npm i jsonwebtoken -> Verify tokens sent by   clients/ Secure APIs without storing sessions on the server/ it is a bearer token
-- User & Video Model Completed.
-- Command 16 -- npm i cloudinary
-- Command 17 -- npm i multer
-- All setup configured. user routes done data is getting fetched in PostMan Application. Controller file also added. All working fine. 11.1.26
-- ERD - [Model Link]( https://app.eraser.io/workspace/YtPqZ1VogxGy1jzIDkzj)
+
+2. Create `.env` from `.env.example` and fill in real values:
+
+```bash
+cp .env.example .env
+```
+
+3. Start MongoDB locally or set `MONGODB_URI` to your hosted MongoDB connection string.
+
+4. Run the development server:
+
+```bash
+npm run dev
+```
+
+## Scripts
+
+```bash
+npm start
+npm run dev
+npm test
+npm run format
+npm run format:check
+npm run check
+```
+
+## Base Routes
+
+- `GET /` - API root status
+- `GET /api/v1/healthcheck` - health check
+- `POST /api/v1/user/register`
+- `POST /api/v1/user/login`
+- `POST /api/v1/user/logout`
+- `POST /api/v1/user/refresh-token`
+- `POST /api/v1/user/change-password`
+- `GET /api/v1/user/current-user`
+- `PATCH /api/v1/user/update-account`
+- `PATCH /api/v1/user/avatar`
+- `PATCH /api/v1/user/cover-image`
+- `GET /api/v1/user/c/:username`
+- `GET /api/v1/user/history`
+- `GET /api/v1/videos`
+- `POST /api/v1/videos`
+- `GET /api/v1/videos/:videoId`
+- `PATCH /api/v1/videos/:videoId`
+- `DELETE /api/v1/videos/:videoId`
+- `PATCH /api/v1/videos/toggle/publish/:videoId`
+
+`/api/v1/users/*` is also supported as an alias for `/api/v1/user/*`.
+
+## Deployment Notes
+
+- Set `NODE_ENV=production`.
+- Set `CORS_ORIGIN` to the deployed frontend origin. Multiple origins can be comma-separated.
+- Set strong `ACCESS_TOKEN_SECRET` and `REFRESH_TOKEN_SECRET` values.
+- Use a hosted MongoDB connection string in `MONGODB_URI`.
+- Configure Cloudinary credentials for file uploads.
+- Keep `public/temp` as scratch space only; uploaded temp files are gitignored.

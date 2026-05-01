@@ -1,26 +1,69 @@
-import express from "express";
-import cors from "cors";
 import cookieParser from "cookie-parser";
+import cors from "cors";
+import express from "express";
+import { MAX_JSON_SIZE, PROJECT_NAME } from "./constants.js";
+import {
+  errorHandler,
+  notFoundHandler,
+} from "./middlewares/error.middleware.js";
+import healthcheckRouter from "./routes/healthcheck.routes.js";
+import userRouter from "./routes/user.routes.js";
+import videoRouter from "./routes/video.routes.js";
+import { apiError } from "./utils/apiError.js";
+import { apiResponse } from "./utils/apiResponse.js";
 
 const app = express();
 
-app.use(cors({
-    origin: process.env.CORS_ORIGIN, // Value of cons_origin present in .env file
-    credentials: true
-}));
+const allowedOrigins = (process.env.CORS_ORIGIN || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
-app.use(express.json({limit: "1mb"}));
-app.use(express.urlencoded({extended: true, limit: "1mb"}));
+app.set("trust proxy", 1);
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (
+        !origin ||
+        allowedOrigins.length === 0 ||
+        allowedOrigins.includes("*") ||
+        allowedOrigins.includes(origin)
+      ) {
+        return callback(null, true);
+      }
+
+      return callback(new apiError(403, "Not allowed by CORS"));
+    },
+    credentials: true,
+  })
+);
+
+app.use(express.json({ limit: MAX_JSON_SIZE }));
+app.use(express.urlencoded({ extended: true, limit: MAX_JSON_SIZE }));
 app.use(express.static("public"));
-
 app.use(cookieParser());
 
-// routes import
-import userRouter from "./routes/user.routes.js";
+app.get("/", (req, res) => {
+  return res.status(200).json(
+    new apiResponse(
+      200,
+      {
+        name: PROJECT_NAME,
+        docs: "/api/v1/healthcheck",
+      },
+      "API is running"
+    )
+  );
+});
 
-// routes decleration
+app.use("/healthcheck", healthcheckRouter);
+app.use("/api/v1/healthcheck", healthcheckRouter);
 app.use("/api/v1/user", userRouter);
+app.use("/api/v1/users", userRouter);
+app.use("/api/v1/videos", videoRouter);
 
-// http://localhost:8000/api/v1/user/register
+app.use(notFoundHandler);
+app.use(errorHandler);
 
-export {app};
+export { app };

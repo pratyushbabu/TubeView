@@ -1,27 +1,58 @@
-import { v2 as cloudinary } from 'cloudinary';
-import fs from 'fs';
-cloudinary.config({ 
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
-  api_key: process.env.CLOUDINARY_API_KEY, 
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+import fs from "fs";
+import { v2 as cloudinary } from "cloudinary";
 
-const uploadOnCloudinary = async (localFilePath) => {
-    try {
-        if(!localFilePath) throw new Error("File path is required");
-        // Upload the file to Cloudinary
-        const response = await cloudinary.uploader.upload(localFilePath, {
-            resource_type: "auto",
-        })
-        // File has been uploaded, now we can remove it from the server
-        // console.log("File uploaded successfully on cloudinary", response.url);
-        fs.unlinkSync(localFilePath);
-        return response;
-    }
-    catch(error) {
-        fs.unlinkSync(localFilePath); // Remove the file from server in case of error
-        return null;
-    }
-}
+const configureCloudinary = () => {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+};
 
-export { uploadOnCloudinary };
+const removeLocalFile = (localFilePath) => {
+  if (localFilePath && fs.existsSync(localFilePath)) {
+    fs.unlinkSync(localFilePath);
+  }
+};
+
+const uploadOnCloudinary = async (
+  localFilePath,
+  folder = "youtube-duplicate"
+) => {
+  try {
+    if (!localFilePath) {
+      return null;
+    }
+
+    configureCloudinary();
+
+    const response = await cloudinary.uploader.upload(localFilePath, {
+      folder,
+      resource_type: "auto",
+    });
+
+    removeLocalFile(localFilePath);
+    return response;
+  } catch (error) {
+    removeLocalFile(localFilePath);
+    return null;
+  }
+};
+
+const deleteFromCloudinary = async (publicId, resourceType = "image") => {
+  try {
+    if (!publicId) {
+      return null;
+    }
+
+    configureCloudinary();
+
+    return await cloudinary.uploader.destroy(publicId, {
+      resource_type: resourceType,
+    });
+  } catch (error) {
+    return null;
+  }
+};
+
+export { deleteFromCloudinary, removeLocalFile, uploadOnCloudinary };
