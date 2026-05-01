@@ -28,13 +28,7 @@ const userSchema = new Schema(
             type: String, // cloudnary url - a kind of service
             required: true,
         },
-        watchHistory: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "Video",
-            }
-        ],
-        coverimage: {
+        coverImage: {
             type: String,
             required: false,
         },
@@ -42,6 +36,12 @@ const userSchema = new Schema(
             type: String,
             required: [true, 'Password is required.'],
         },
+        watchHistory: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Video",
+            }
+        ],
         refreshToken: {
             type: String,
         },
@@ -50,12 +50,11 @@ const userSchema = new Schema(
     {timestamps: true}
 );
 
-userSchema.pre("save", async function(next) {
+userSchema.pre("save", async function() {
     if(!this.isModified("password")) {
-        return next();
+        return;
     }
     this.password = await bcrypt.hash(this.password,10);
-    next();
 });
 
 userSchema.methods.isPasswordCorrect = async function(password) {

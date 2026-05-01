@@ -3,6 +3,7 @@ import { apiError } from "../utils/apiError.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { apiResponse } from "../utils/apiResponse.js";
+import fs from 'fs';
 
 const registerUser = asyncHandler(async (req,res) => {
     // res.status(200).json({
@@ -38,7 +39,7 @@ const registerUser = asyncHandler(async (req,res) => {
 
     // To check if the user already exists...
     // check in db using email or username
-    const userExists = User.findOne({
+    const userExists = await User.findOne({
         $or: [{ username }, { email }] /* these are operators => (doller : $)or:[{},{}] */
     })
 
@@ -47,41 +48,52 @@ const registerUser = asyncHandler(async (req,res) => {
         throw new apiError(409, "User already exists with the given email or username. ");
     }
 
-    const avatarLocalPath = req.files?.avatar[0/* Object */]?.path;
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    // const avatarLocalPath = req.files?.avatar[0/* Object */]?.path;
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path;
 
-    console.log("avatarLocalPath: ", avatarLocalPath); // just for checking
-    console.log("coverImageLocalPath: ", coverImageLocalPath); // just for checking
+    // console.log("req.files: ", req.files); // just for checking
+    // console.log("avatarLocalPath: ", avatarLocalPath); // just for checking
+    // console.log("coverImageLocalPath: ", coverImageLocalPath); // just for checking
+
+    let avatarLocalPath;
+    if (req.files && req.files.avatar && Array.isArray(req.files.avatar) && req.files.avatar.length > 0) {
+        avatarLocalPath = req.files.avatar[0].path;
+    }
+
+    let coverImageLocalPath;
+    if (req.files && req.files.coverImage && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+        coverImageLocalPath = req.files.coverImage[0].path;
+    }
 
     if(!avatarLocalPath) {
+        // Clean up any uploaded cover image
+        if (coverImageLocalPath && fs.existsSync(coverImageLocalPath)) {
+            fs.unlinkSync(coverImageLocalPath);
+        }
         throw new apiError (400, "Avatar file is required. ");
     }
-    if(!coverImageLocalPath) {
-        throw new apiError (400, "Avatar file is required. ");
-    }
+    // Cover image is optional, no check needed
 
 
     // upload files to cloudinary
     const avatarImageUploadResponse = await uploadOnCloudinary(avatarLocalPath);
-    const coverImageUploadResponse = await uploadOnCloudinary(coverImageLocalPath);
+    const coverImageUploadResponse = coverImageLocalPath ? await uploadOnCloudinary(coverImageLocalPath) : null;
 
-    console.log("avatarImageUploadResponse: ", avatarImageUploadResponse); // just for checking
-    console.log("coverImageUploadResponse: ", coverImageUploadResponse); // just for checking
+    // console.log("avatarImageUploadResponse: ", avatarImageUploadResponse); // just for checking
+    // console.log("coverImageUploadResponse: ", coverImageUploadResponse); // just for checking
 
     if(!avatarImageUploadResponse) {
         throw new apiError (400, "Avatar file Upload Unsuccessful. ");
     }
-    if(!coverImageUploadResponse) {
-        throw new apiError (400, "Cover Image file Upload Unsuccessful. ");
-    }
+    // Cover image upload is optional, no check if failed
 
     const user = await User.create({
         fullName,
-        avatar: avatarImageUploadResponse.url,
-        coverImage: coverImageLocalPath.url,
         email,
         password,
-        username: username.toLowerCase(),        
+        username: username.toLowerCase(), 
+        avatar: avatarImageUploadResponse.url,
+        coverImage: coverImageUploadResponse?.url || "",
     })
 
     // check if user creation is successful by findBbyId
